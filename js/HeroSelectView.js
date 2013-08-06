@@ -49,7 +49,10 @@ var HeroSelectView = Backbone.View.extend({
 
     _listAll: function(){
         this.filterHeros = new Array();
-        this.filterHeros = _.shuffle(this.collection.toJSON());
+        this.filterHeros = _.shuffle(
+            _.find(this.collection.toJSON(), function(item){
+                return item.available == true    
+            }));
         this.trigger("render");
     },
 
