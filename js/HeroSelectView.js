@@ -5,6 +5,7 @@ var HeroSelectView = Backbone.View.extend({
         "click a[data-action=selectMaster]": "_filterWithMaster",
         "click a[data-action=select]": "_filter",
         "click .item.active":"_select",
+        "click a[data-action=lock]":"_lock",
         "click a[data-action=search]": "_search",
         "click a[data-action=back]": "_back"
     },
@@ -15,6 +16,11 @@ var HeroSelectView = Backbone.View.extend({
 
     initialize: function(){
         console.log("Initialize ... Hero size",this.collection.size());
+        this.availableHeros = _.shuffle(
+            _.filter(this.collection.toJSON(), function(item){
+                return item.available == true
+            }));
+        console.log("Available Hero Size", this.availableHeros.length);
         this.on("render", this.render, this);
     },
 
@@ -35,6 +41,10 @@ var HeroSelectView = Backbone.View.extend({
         this.$(".operations").hide();
     },
 
+    _lock: function(){
+
+    },
+
     displayOperations: function(){
         this.$(".operations").show();
     },
@@ -49,10 +59,7 @@ var HeroSelectView = Backbone.View.extend({
 
     _listAll: function(){
         this.filterHeros = new Array();
-        this.filterHeros = _.shuffle(
-            _.find(this.collection.toJSON(), function(item){
-                return item.available == true    
-            }));
+        this.filterHeros = _.shuffle(this.availableHeros);
         this.trigger("render");
     },
 
@@ -60,19 +67,20 @@ var HeroSelectView = Backbone.View.extend({
         var self = this;
         var searchString = this.$("input[type=text]").val();
         if(!searchString){
-            alert("点你妹啊！");
+            alert("哥们，能给点力么？");
             return
         }
         this.filterHeros = new Array();
-        var hero = _.find(self.collection.toJSON(),function(h){
-            return h.name === searchString
+        var heros = _.filter(this.availableHeros, function(h){
+            return h.name.indexOf(searchString) != -1
         });
-        if(hero){
-            this.filterHeros.push(hero);
+        if(heros.length != 0){
+            _.each(heros, function(hero){
+                self.filterHeros.push(hero);
+            });
             this.trigger("render");
         } else {
-            alert("你确定有这货！");
-            return
+            alert("哥啊！我真的找不到这哥们！");
         }
     },
 
@@ -89,7 +97,7 @@ var HeroSelectView = Backbone.View.extend({
     filterOne: function(){
         var self = this;
         while(true){
-            var hero = _.first(self.collection.shuffle()).toJSON();
+            var hero = _.first(_.shuffle(this.availableHeros));
             if(_.find(self.filterHeros, function(h){
                 return h.name === hero.name
             }) === undefined ){
@@ -116,7 +124,7 @@ var HeroSelectView = Backbone.View.extend({
 
     _select: function(event){
         var heroUrl = $(event.currentTarget).data("url");
-        this.$(".viewHero").html("<img class='selectedHero' src='"+heroUrl+"'></img><a class='btn btn-danger' data-action='back'>BBBBBBBBBBBACK</a>");
+        this.$(".viewHero").html("<img class='selectedHero' src='"+heroUrl+"'></img><a class='btn btn-danger' style='margin: 10px' data-action='back'>重选</a>");
         this._hideOperations();
         this._hideHeroZone();
         this._showViewHero();

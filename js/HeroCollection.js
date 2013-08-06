@@ -1,4 +1,4 @@
-var HeroCollection = Backbone.Collection.extend({
+﻿var HeroCollection = Backbone.Collection.extend({
 
     initialize: function(){
         this.add([
@@ -851,14 +851,6 @@ var HeroCollection = Backbone.Collection.extend({
 
 
             {
-                name: "sp庞统",
-                url: "source/sp庞统.png",
-                health: 3,
-                available: true
-            },
-
-
-            {
                 name: "sp灵雎",
                 url: "source/sp灵雎.png",
                 health: 3,
@@ -908,7 +900,7 @@ var HeroCollection = Backbone.Collection.extend({
 
             {
                 name: "sp赵云",
-                url: "source/sp赵云.png",
+                url: "source/sp赵云.jpg",
                 health: 3,
                 available: true
             },
