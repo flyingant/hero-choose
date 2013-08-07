@@ -20,6 +20,10 @@ var HeroSelectView = Backbone.View.extend({
             _.filter(this.collection.toJSON(), function(item){
                 return item.available == true
             }));
+        // encode the chinese words to special ...   
+        this.availableHeros = _.map(this.availableHeros, function(hero){
+            return _.extend(hero, {extraUrl: escape(hero.url).toLowerCase().split('%u').join('%23U')});
+        });
         console.log("Available Hero Size", this.availableHeros.length);
         this.on("render", this.render, this);
     },
