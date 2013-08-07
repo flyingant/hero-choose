@@ -95,6 +95,10 @@ var HeroSelectView = Backbone.View.extend({
         for(var i=0;i<5;i++){
             this.filterHeros.push(self.filterOne());
         }
+        //encoding ...
+        this.filterHeros = _.map(this.filterHeros, function(hero){
+            return _.extend(hero, {extraUrl: escape(hero.url).toLowerCase().split('%u').join('%23U')});
+        });
         this.trigger("render");
     },
 
