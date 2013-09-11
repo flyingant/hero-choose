@@ -1,137 +1,107 @@
 var HeroSelectView = Backbone.View.extend({
 
     events:{
-        "click a[data-action=list]": "_listAll",
-        "click a[data-action=selectMaster]": "_filterWithMaster",
-        "click a[data-action=select]": "_filter",
-        "click .item.active":"_select",
-        "click a[data-action=lock]":"_lock",
-        "click a[data-action=search]": "_search",
-        "click a[data-action=back]": "_back"
+        "click a[data-action=choose-package]": "choosePackage",
+        "click a[data-action=choose-master]": "chooseMaster",
+        "click a[data-action=choose-hero]": "chooseHero",
+        "click a[data-action=search]": "search",
+        "click .item.active":"selectHero",
+        "dblclick #selectedHeroImage":"hideModal",
+        "click .cancelButton":"hideModal",
+        "click .backButton":"hideModalAndBack"
     },
 
-    template: function(){
-        return Handlebars.compile($("#heroItemsTemplate").html())
+    homeTemplate: function(){
+        return Handlebars.compile($("#homeTemplate").html());
+    },
+
+    chooseMenuTemplate: function(){
+        return Handlebars.compile($("#chooseMenuTemplate").html());
+    },
+
+    heroChooserTemplate: function(){
+        return Handlebars.compile($("#heroChooserTemplate").html());
+    },
+
+    heroDetailsTemplate: function(){
+        return Handlebars.compile($("#heroDetailsTemplate").html());
     },
 
     initialize: function(){
-        console.log("Initialize ... Hero size",this.collection.size());
-        this.availableHeros = _.shuffle(
-            _.filter(this.collection.toJSON(), function(item){
-                return item.available == true
-            }));
-        console.log("Available Hero Size", this.availableHeros.length);
-        this.on("render", this.render, this);
+        this.model.on("change:mode", this.render, this);
+        this.model.on("RenderHeroChooser", this.renderHeroChooser, this);
     },
 
     render: function(){
         var self = this;
-        this.$(".carousel-inner").html(self.template()({
-            heros: self.filterHeros
-        }));
+        var mode = self.model.get("mode");
+        if(self.model.get("mode") == "HOME"){
+            $(this.el).html(
+                self.homeTemplate()
+            );
+        } else {
+            $(this.el).html(
+                self.chooseMenuTemplate()
+            );
+        }
+    },
+
+    renderHeroChooser: function(){
+        $(this.el).html(
+            this.heroChooserTemplate()({
+                heros: _.shuffle(this.model.currentHeros)
+            })
+        );
         this.$(".carousel-inner div:first-child").addClass("active");
-        $("#viewHerosPanle").carousel({
+        $("#heroChooserCarousel").carousel({
             interval: 2000000
         });
-        this._hideOperations();
-        this._showHeroZone();
     },
 
-    _hideOperations: function(){
-        this.$(".operations").hide();
+    choosePackage: function(event){
+        var choosePackage = $(event.currentTarget).data("package");
+        console.log("Choose Package",choosePackage);
+        Backbone.history.navigate(""+choosePackage.toLowerCase(), {trigger: true, replace: true});
     },
 
-    _lock: function(){
-
+    chooseMaster: function(){
+        this.model.randomFindHeros(5, true);
     },
 
-    displayOperations: function(){
-        this.$(".operations").show();
+    chooseHero: function(){
+        this.model.randomFindHeros(5, false);
     },
 
-    _filter: function(){
-        this.filterHeros = new Array();
-        for(var i=0;i<5;i++){
-            this.filterHeros.push(this.filterOne());
-        }
-        this.trigger("render");
-    },
-
-    _listAll: function(){
-        this.filterHeros = new Array();
-        this.filterHeros = _.shuffle(this.availableHeros);
-        this.trigger("render");
-    },
-
-    _search: function(){
-        var self = this;
+    search: function(){
         var searchString = this.$("input[type=text]").val();
         if(!searchString){
-            alert("哥们，能给点力么？");
+            alert("能给点力么？");
             return
         }
-        this.filterHeros = new Array();
-        var heros = _.filter(this.availableHeros, function(h){
-            return h.name.indexOf(searchString) != -1
-        });
-        if(heros.length != 0){
-            _.each(heros, function(hero){
-                self.filterHeros.push(hero);
-            });
-            this.trigger("render");
-        } else {
-            alert("哥啊！我真的找不到这哥们！");
-        }
+        this.model.criteria.queryString = searchString;
+        this.model.search();
+        this.model.currentHeros = this.model.availableHeros;
+        this.model.trigger("RenderHeroChooser");
     },
 
-    _filterWithMaster: function(){
+    selectHero: function(event){
         var self = this;
-        this.filterHeros = new Array();
-        this.filterHeros = this.collection.filterMasterHeros();
-        for(var i=0;i<5;i++){
-            this.filterHeros.push(self.filterOne());
-        }
-        this.trigger("render");
+        var heroURL = $(event.currentTarget).data("url");
+        this.$("#selectedHeroPanel").html(
+            self.heroDetailsTemplate()({
+                heroURL: heroURL
+            })
+        );
+        this.$("#heroDetailsPanel").modal("show");
     },
 
-    filterOne: function(){
-        var self = this;
-        while(true){
-            var hero = _.first(_.shuffle(this.availableHeros));
-            if(_.find(self.filterHeros, function(h){
-                return h.name === hero.name
-            }) === undefined ){
-                return hero;
-            }
-        };
+    hideModal: function(){
+        this.$("#heroDetailsPanel").modal("hide");
     },
 
-    _hideHeroZone: function(){
-        this.$(".heroZone").hide();
-    },
-
-    _showHeroZone: function(){
-        this.$(".heroZone").show();
-    },
-
-    _hideViewHero: function(){
-        this.$(".viewHero").hide();
-    },
-
-    _showViewHero: function(){
-        this.$(".viewHero").show();
-    },
-
-    _select: function(event){
-        var heroUrl = $(event.currentTarget).data("url");
-        this.$(".viewHero").html("<img class='selectedHero' src='"+heroUrl+"'></img><a class='btn btn-danger' style='margin: 10px' data-action='back'>重选</a>");
-        this._hideOperations();
-        this._hideHeroZone();
-        this._showViewHero();
-    },
-
-    _back: function(){
-        this._hideViewHero();
-        this.displayOperations();
+    hideModalAndBack: function(){
+        this.hideModal();
+        this.render();
     }
-})
+
+});
