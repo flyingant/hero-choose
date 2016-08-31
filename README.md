@@ -1,8 +1,6 @@
-hero-choose
+sgs heros
 ===========
 
 三国杀选武将
 
-节操在哪儿？
-
-See on : http://herochooser.aws.af.cm
+See on : http://flyingant.github.io/sgx-heros/
